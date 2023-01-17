@@ -1,0 +1,34 @@
+{
+  "name": "u4d12",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon -r dotenv/config -e js .src/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DrPleasure/U4D12.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DrPleasure/U4D12/issues"
+  },
+  "homepage": "https://github.com/DrPleasure/U4D12#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-list-endpoints": "^6.0.0",
+    "express-validator": "^6.14.2",
+    "http-error": "^0.0.6",
+    "mongoose": "^6.8.3"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.3",
+    "nodemon": "^2.0.20"
+  }
+}

@@ -1,28 +1,26 @@
-import { express } from "express";
-import listEndpoints from "express-list-endpoints";
+import express from "express"
+import listEndpoints from "express-list-endpoints"
 import cors from "cors"
-import mongoose from "mongoose";
+import mongoose from "mongoose"
+import postsRouter from "./api/posts/index.js"
 
 const server = express()
-const port = process.env.PORT // 3001 make OR thing
+const port = process.env.PORT || 3001
 
-const MONGO_URL = process.env.MONGO_URL
-
-
-// *********************** MIDDLEWARES ***********************
-
+// ******************************* MIDDLEWARES ****************************************
 server.use(cors())
 server.use(express.json())
 
-// *********************** ENDPOINTS ***********************
-// *********************** ERROR HANDLERS ***********************
+// ******************************** ENDPOINTS *****************************************
+server.use("/posts", postsRouter)
 
+// ***************************** ERROR HANDLERS ***************************************
 mongoose.connect(process.env.MONGO_URL)
 
-mongoose.connection.on('Connected', () => {
-console.log('Successfully connected to Mongo!')
-server.listen(port, () => {
+mongoose.connection.on("connected", () => {
+  console.log("Successfully connected to Mongo!")
+  server.listen(port, () => {
     console.table(listEndpoints(server))
-    console.log('Server is running on port ${port}')
-})
+    console.log(`Server is running on port ${port}`)
+  })
 })

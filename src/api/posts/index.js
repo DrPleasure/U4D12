@@ -20,7 +20,7 @@ const authMiddleware = (req, res, next) => {
   
   postsRouter.post("/", async (req, res, next) => {
     try {
-      const newPost = new postsModel({ ...req.body, authors: [req.user._id] });
+      const newPost = new postsModel({ ...req.body, authors: [req.user._id, ...req.body.authors] });
       const { _id } = await newPost.save();
       res.status(201).send({ _id });
     } catch (error) {

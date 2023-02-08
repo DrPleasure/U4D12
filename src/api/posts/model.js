@@ -11,11 +11,11 @@ const postsSchema = new Schema(
       value: { type: Number, required: true },
       unit: { type: String, required: true },
     },
-    user: {
+    authors: [{
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-    },
+    }],
     content: { type: String, required: true },
   },
   {

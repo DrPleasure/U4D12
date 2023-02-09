@@ -2,10 +2,30 @@ import express from "express"
 import { adminOnlyMiddleware } from "../../lib/auth/adminOnly.js"
 import { basicAuthMiddleware } from "../../lib/auth/basicAuth.js"
 import UsersModel from "./model.js"
+import CreateHttpError from "http-errors"
+import { createAccessToken } from "../../lib/auth/tools.js"
+import { JWTAuthMiddleware } from "../../lib/auth/jwtAuth.js"
+import passport from "passport"
+
 
 const usersRouter = express.Router()
 
-usersRouter.post("/", async (req, res, next) => {
+// ADDS GOOGLE ENDPOINTS
+
+usersRouter.get("/googleLogin", passport.authenticate("google", { scope: ["profile", "email"] }))
+// The purpose of this endpoint is to redirect users to Google Consent Screen
+
+
+usersRouter.get(
+  "/googleRedirect",
+  passport.authenticate("google", { session: false }),
+  async (req, res, next) => {
+    console.log(req.user)
+    res.redirect(`${process.env.FE_URL}?accessToken=${req.user.accessToken}`)
+  }
+)
+
+usersRouter.post("/register", async (req, res, next) => {
   try {
     const newUser = new UsersModel(req.body)
     const { _id } = await newUser.save()
@@ -15,7 +35,32 @@ usersRouter.post("/", async (req, res, next) => {
   }
 })
 
-usersRouter.get("/", basicAuthMiddleware, adminOnlyMiddleware, async (req, res, next) => {
+// VERIFY LOGIN 
+
+usersRouter.post("/login", async (req, res, next) => {
+  try {
+    // 1. Obtain the credentials from req.body
+    const { email, password } = req.body
+
+    // 2. Verify the credentials
+    const user = await UsersModel.checkCredentials(email, password)
+
+    if (user) {
+      // 3.1 If credentials are fine --> generate an access token (JWT) and send it back as a response
+      const payload = { _id: user._id, role: user.role }
+
+      const accessToken = await createAccessToken(payload)
+      res.send({ accessToken })
+    } else {
+      // 3.2 If credentials are NOT fine --> trigger a 401 error
+      next(CreateHttpError(401, "Credentials are not ok!"))
+    }
+  } catch (error) {
+    next(error)
+  }
+})
+
+usersRouter.get("/", JWTAuthMiddleware, adminOnlyMiddleware, async (req, res, next) => {
   try {
     const users = await UsersModel.find({})
     res.send(users)
@@ -24,7 +69,7 @@ usersRouter.get("/", basicAuthMiddleware, adminOnlyMiddleware, async (req, res, 
   }
 })
 
-usersRouter.get("/me", basicAuthMiddleware, async (req, res, next) => {
+usersRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
     res.send(req.user)
   } catch (error) {
@@ -32,7 +77,7 @@ usersRouter.get("/me", basicAuthMiddleware, async (req, res, next) => {
   }
 })
 
-usersRouter.put("/me", basicAuthMiddleware, async (req, res, next) => {
+usersRouter.put("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const updatedUser = await UsersModel.findByIdAndUpdate(req.user._id, req.body, {
       new: true,
@@ -44,7 +89,7 @@ usersRouter.put("/me", basicAuthMiddleware, async (req, res, next) => {
   }
 })
 
-usersRouter.delete("/me", basicAuthMiddleware, async (req, res, next) => {
+usersRouter.delete("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
     await UsersModel.findByIdAndUpdate(req.user._id)
     res.status(204).send()
@@ -53,7 +98,7 @@ usersRouter.delete("/me", basicAuthMiddleware, async (req, res, next) => {
   }
 })
 
-usersRouter.get("/:userId", basicAuthMiddleware, async (req, res, next) => {
+usersRouter.get("/:userId", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const user = await UsersModel.findById(req.params.userId)
     res.send(user)
@@ -61,14 +106,14 @@ usersRouter.get("/:userId", basicAuthMiddleware, async (req, res, next) => {
     next(error)
   }
 })
-usersRouter.put("/:userId", basicAuthMiddleware, adminOnlyMiddleware, async (req, res, next) => {
+usersRouter.put("/:userId", JWTAuthMiddleware, adminOnlyMiddleware, async (req, res, next) => {
   try {
   } catch (error) {
     next(error)
   }
 })
 
-usersRouter.delete("/:userId", basicAuthMiddleware, adminOnlyMiddleware, async (req, res, next) => {
+usersRouter.delete("/:userId", JWTAuthMiddleware, adminOnlyMiddleware, async (req, res, next) => {
   try {
   } catch (error) {
     next(error)

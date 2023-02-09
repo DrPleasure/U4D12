@@ -4,6 +4,8 @@ import cors from "cors"
 import mongoose from "mongoose"
 import postsRouter from "./api/posts/index.js"
 import usersRouter from "./api/users/index.js"
+import passport from "passport"
+import googleStrategy from "./lib/auth/google.js"
 import {
   forbiddenErrorHandler,
   genericErroHandler,
@@ -13,6 +15,8 @@ import {
 
 const server = express()
 const port = process.env.PORT || 3001
+
+passport.use("google", googleStrategy)
 
 // ******************************* MIDDLEWARES ****************************************
 server.use(cors())
